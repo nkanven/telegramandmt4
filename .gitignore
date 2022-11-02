@@ -48,3 +48,7 @@ Thumbs.db
 *.mov
 *.wmv
 
+*.txt
+*.session
+*.session-journal
+
