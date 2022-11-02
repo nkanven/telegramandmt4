@@ -1,3 +1,5 @@
+#pip install auto-py-to-exe
+
 def OnStartChecks():
     orderTicketFilePath = "orderticket.txt"
     history = client(GetHistoryRequest(
