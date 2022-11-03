@@ -6,9 +6,10 @@ print("MetaTrader5 package version: ",mt5.__version__)
 # establish MetaTrader 5 connection to a specified trading account
 mt5.initialize()
 
+#48133080 0N)JKN7s
 login=48133064
 server="HFMarketsGlobal-Demo"
-password="gwLsYRx10"
+password="Meanselme89"
 
 
 authorized=mt5.login(login, password, server)
