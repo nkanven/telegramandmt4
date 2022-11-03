@@ -107,7 +107,7 @@ void readTelegramFile()
 //+------------------------------------------------------------------+
 void sendOrder(string type, string direction, string symbol, double entryPrice, double takeProfit, double stopLoss)
   {
-   int    ticket;
+   int    ticket = 0;
    symbol = inpSymbolPrefix+symbol+inpSymbolSuffix;
    double lotSize;
 
@@ -134,7 +134,7 @@ void sendOrder(string type, string direction, string symbol, double entryPrice, 
          lotSize = LotSizeCalculate(OP_SELL, stopLoss, symbol, vpoint);
          Print("Lot size ", lotSize);
 
-         ticket=OrderSend(symbol,OP_SELL,inpDefaultLotSize,vbid,inpMaxSlippage, stopLoss,takeProfit,"Trade from eInvestors",inpMagicNumber,0,Green);
+         ticket=OrderSend(symbol,OP_SELL,lotSize,vbid,inpMaxSlippage, stopLoss,takeProfit,"Trade from eInvestors",inpMagicNumber,0,Green);
         }
 
       if(ticket>0)
@@ -173,6 +173,7 @@ double LotSizeCalculate(int ordertype, double stoploss, string symbol, double vp
            }
      }
 //Print("SL ", SL, " risk base ", AccountInfoDouble(ACCOUNT_BALANCE), "tick value ", tickValue);
+Print("if statement ", SL != 0 && inpRiskDefault == RISK_DEFAULT_AUTO);
    if(SL != 0 && inpRiskDefault == RISK_DEFAULT_AUTO)
      {
       riskBaseAmount = AccountInfoDouble(ACCOUNT_BALANCE);
