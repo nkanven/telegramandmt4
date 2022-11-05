@@ -30,7 +30,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-PAYMENT_PROVIDER_TOKEN = "284685063:TEST:MjU0MTM2YmY0ZjU1"
+PAYMENT_PROVIDER_TOKEN = "284685063:TEST:NTdhNmVhZjNhNjU0"
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -89,9 +89,20 @@ Si vous payez via PayPal, cela prend parfois quelques minutes, n’achetez pas d
 
 Si vous avez besoin d’aide, envoyez un courriel à Anselme ici: anselme.nkondog@salixnigra.com 📧
 
-Si vous ne voyez pas le bouton S’abonner, cliquez sur le bouton avec 4 points en bas à droite à côté de l’image du microphone ou tapez /start 🎤    """
-    await update.message.reply_text(intro_message, reply_markup=reply_markup)
+Si vous ne voyez pas le bouton S’abonner,  clique ici 👉🏽 /Abonnement"""
+    await update.message.reply_text(intro_message)
 
+async def abonnement(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Subscription"""
+    keyboard = [
+        [InlineKeyboardButton("S'abonner", callback_data="3")],
+    ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    intro_message = """Clique pour commencer la procédure d'abonnement aux signaux."""
+
+    await update.message.reply_text(intro_message, reply_markup=reply_markup)
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Parses the CallbackQuery and updates the message text."""
@@ -112,14 +123,15 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         intro_message = """
-    Choisissez l’un des tarifs présentés:
+Choisis l’un des tarifs présentés:
 
-    Mensuel (30 jours) - $40.0
-    Annuel (365 jours) - $200.0
-    A vie 🏆 (♾ éternellement) - $500.0
-    """
+Mensuel (30 jours) - $40.0
+Annuel (365 jours) - $200.0
+A vie 🏆 (♾ éternellement) - $500.0
+"""
         await query.edit_message_text(intro_message, reply_markup=reply_markup)
     elif query.data == "40" or query.data == "200" or query.data == "500":
+        label = "Mensuel" if query.data == "40" else "Annuel" if query.data == "200" else "A vie"
         """Sends an invoice without shipping-payment."""
         chat_id = query.message.chat.id
         title = "eInvestor Trading Signal Bot"
@@ -131,7 +143,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         # price in dollars
         price = int(query.data)
         # price * 100 so as to include 2 decimal points
-        prices = [LabeledPrice("Plan Mensuel", price * 100)]
+        prices = [LabeledPrice(label, price * 100)]
 
         # optionally pass need_name=True, need_phone_number=True,
         # need_email=True, need_shipping_address=True, is_flexible=True
@@ -152,6 +164,7 @@ async def precheckout_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         await query.answer(ok=False, error_message="Something went wrong...")
     else:
         await query.answer(ok=True)
+        print(query)
 
 
 # finally, after contacting the payment provider...
@@ -160,7 +173,14 @@ async def successful_payment_callback(update: Update, context: ContextTypes.DEFA
     # do something after successfully receiving payment?
     keyboard = [[InlineKeyboardButton("⭐️ Rejoins le groupe ⭐️", url="https://t.me/+DO2w2iQvujljNTA0"),]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Merci pour ton paiement! Rejoins immédiatement notre canal de signaux de trading", reply_markup=reply_markup)
+    payment_message = """
+✅ L’abonnement a été payé et activé avec succès!
+
+1. Après avoir rejoint le canal en utilisant le bouton ci-dessus, clique sur le message épinglé pour accéder à la zone des membres. C’est ici que tu télécharges le copytrader gratuit et accèdes à tous nos documents secrets.🆓
+
+2. Si tu as besoin de vérifier ton abonnement, reviens à ce bot (@mySalixBot) et clique sur informations. C’est également là que vous pouvez accéder au canal de signaux si tu le quittes accidentellement. 🔑
+"""
+    await update.message.reply_text(payment_message, reply_markup=reply_markup)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Displays info on how to use the bot."""
@@ -170,9 +190,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 def main() -> None:
     """Run the bot."""
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token("1203586996:AAF3GTCy2yVyvXsCjd9pODhJncTUG7NcOKw").build()
+    application = Application.builder().token("5693377576:AAGkLB6mocl9D8qS3ip4EUcUlub346wGJ1w").build()
 
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("abonnement", abonnement))
     application.add_handler(CallbackQueryHandler(button))
     application.add_handler(CommandHandler("help", help_command))
 
