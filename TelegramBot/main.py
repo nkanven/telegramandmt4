@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from telegram import __version__ as TG_VER
 
@@ -52,7 +53,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     intro_message = """
-👋 Hello! Je suis Salix Nigra bot, je serai votre interlocuteur.
+👋 Hello! Je suis le bot eInvestor, je serai votre interlocuteur.
 
 Cliquez sur S’abonner ci-dessous pour commencer à recevoir immédiatement Mes signaux de trading eInvestors! 📈
 
@@ -67,13 +68,13 @@ Cliquez sur S’abonner ci-dessous pour commencer à recevoir immédiatement Mes
 📈Copieur de trading pour MT4 et MT5 pour tous les membres VIP (signaux de trading automatique de n’importe où dans le monde!) 🗺
 📈Aperçu exclusif des projets dans lesquels Anselme investit (Actions, ETF, matières premières et idées d'investissement)
 
-Mars  -19% ✅
+Mars  -19% ❌
 Avril +0.49% ✅
 Mai +5.42% ✅
 Juin +6.88% ✅
 Juillet -3.6% ✅
 August +13.42% ✅
-September -30.27% ✅
+September -30.27% ❌
 
 ✅ Risk 1-3% per trade ✅
 
@@ -165,7 +166,6 @@ async def precheckout_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         await query.answer(ok=False, error_message="Something went wrong...")
     else:
         await query.answer(ok=True)
-        print(query)
 
 
 # finally, after contacting the payment provider...
@@ -186,9 +186,25 @@ async def successful_payment_callback(update: Update, context: ContextTypes.DEFA
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
     userSelection = update.message.text.split(" ")[-1].lower()
-    print(userSelection)
+    dt_obj = datetime.now().strftime("%H:%M:%S %Y-%m-%d")
     if userSelection == "information":
-        await update.message.reply_text("Votre abonnement est à ce niveau")
+        info_message = """
+ℹ️ User information as of {}
+👤 {}
+
+📝 Subscription: active
+📅 Time left: 30d. 23h.
+📢 Available groups:
+
+🔸 eInvestors Trading Group 🏆 (https://t.me/+EA42RgkdfFNhZDhk)
+
+🤝 Invited: 0
+🤑 Bonus for invitations: $0.0
+
+You get 10.0% to your bonus account from every payment made by an invited user.
+        """.format(dt_obj, update.message.chat.username)
+
+        await update.message.reply_text(info_message)
     if userSelection == "s'abonner":
         subs_message = """Clique pour commencer la procédure d'abonnement aux signaux."""
 
