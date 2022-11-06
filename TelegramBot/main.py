@@ -31,7 +31,9 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-PAYMENT_PROVIDER_TOKEN = "284685063:TEST:NTdhNmVhZjNhNjU0"
+#Live payment token = 350862534:LIVE:NDljNjYzMWFjYWIw 
+#Test payment token = 284685063:TEST:NTdhNmVhZjNhNjU0
+PAYMENT_PROVIDER_TOKEN = "350862534:LIVE:NDljNjYzMWFjYWIw"
 
 keyboard = [
     [InlineKeyboardButton("S'abonner", callback_data="3")],
