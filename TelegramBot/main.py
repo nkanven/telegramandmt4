@@ -14,7 +14,7 @@ if __version_info__ < (20, 0, 0, "alpha", 1):
         f"visit https://docs.python-telegram-bot.org/en/v{TG_VER}/examples.html"
     )
 from telegram import LabeledPrice, Update
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, Update, Message
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -32,6 +32,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 PAYMENT_PROVIDER_TOKEN = "284685063:TEST:NTdhNmVhZjNhNjU0"
 
+keyboard = [
+    [InlineKeyboardButton("S'abonner", callback_data="3")],
+]
+
+reply_markup = InlineKeyboardMarkup(keyboard)
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Sends a message with three inline buttons attached."""
@@ -40,10 +46,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         #    InlineKeyboardButton("Option 1", callback_data="1"),
         #    InlineKeyboardButton("Option 2", callback_data="2"),
         #],
-        [InlineKeyboardButton("S'abonner", callback_data="3")],
+        [KeyboardButton("ℹ️ Information"), KeyboardButton("📝 S'abonner")],
     ]
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     intro_message = """
 👋 Hello! Je suis Salix Nigra bot, je serai votre interlocuteur.
@@ -90,15 +96,10 @@ Si vous payez via PayPal, cela prend parfois quelques minutes, n’achetez pas d
 Si vous avez besoin d’aide, envoyez un courriel à Anselme ici: anselme.nkondog@salixnigra.com 📧
 
 Si vous ne voyez pas le bouton S’abonner,  clique ici 👉🏽 /Abonnement"""
-    await update.message.reply_text(intro_message)
+    await update.message.reply_text(intro_message, reply_markup=reply_markup)
 
 async def abonnement(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Subscription"""
-    keyboard = [
-        [InlineKeyboardButton("S'abonner", callback_data="3")],
-    ]
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
 
     intro_message = """Clique pour commencer la procédure d'abonnement aux signaux."""
 
@@ -182,6 +183,17 @@ async def successful_payment_callback(update: Update, context: ContextTypes.DEFA
 """
     await update.message.reply_text(payment_message, reply_markup=reply_markup)
 
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Echo the user message."""
+    userSelection = update.message.text.split(" ")[-1].lower()
+    print(userSelection)
+    if userSelection == "information":
+        await update.message.reply_text("Votre abonnement est à ce niveau")
+    if userSelection == "s'abonner":
+        subs_message = """Clique pour commencer la procédure d'abonnement aux signaux."""
+
+        await update.message.reply_text(subs_message, reply_markup=reply_markup)
+
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Displays info on how to use the bot."""
     await update.message.reply_text("Use /start to test this bot.")
@@ -196,6 +208,9 @@ def main() -> None:
     application.add_handler(CommandHandler("abonnement", abonnement))
     application.add_handler(CallbackQueryHandler(button))
     application.add_handler(CommandHandler("help", help_command))
+
+    # on non command i.e message - echo the message on Telegram
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     # Pre-checkout handler to final check
     application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
