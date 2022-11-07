@@ -2,6 +2,7 @@ import mysql.connector
 from mysql.connector import Error
 import logging
 from connect import dbconnect
+from datetime import datetime
 
 # Enable logging
 logging.basicConfig(
@@ -12,21 +13,22 @@ logger = logging.getLogger(__name__)
 
 class insert_data:
 
-    def __init__(self) -> None:
+    def __init__(self, dbconnect) -> None:
+        self.dbconnect = dbconnect
         pass
 
     def insertion(self):
-        mySql_insert_query = """INSERT INTO products (name, price, d_date) 
+        mySql_insert_query = """INSERT INTO products (name, description, price, d_date) 
                            VALUES (%s, %s, %s, %s) """
 
-        records_to_insert = [('Signaux-30', 40, '2019-01-11'),
-                            ('Signaux-365', 365, '2019-02-27'),
-                            ('Signaux à vie', 2330, '2019-07-23')]
+        d_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        records_to_insert = [('Signaux-30', "Abonnement aux signaux de trading eInvestors pour 30 jours", 40, d_date),
+                            ('Signaux-365', "Abonnement aux signaux de trading eInvestors pour un an", 365, d_date),
+                            ('Signaux-life', "Abonnement à vie aux signaux de trading eInvestors", 36500, d_date)]
 
-
-        connection = dbconnect().connect()
-        cursor = connection.cursor()
+        connection = self.dbconnect.connect()
+        cursor = self.dbconnect.cursor()
         cursor.executemany(mySql_insert_query, records_to_insert)
-        connection.commit()
+        self.dbconnect.commit()
         print(cursor.rowcount, "Record inserted successfully into Laptop table")
         cursor.close()

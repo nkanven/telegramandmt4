@@ -1,7 +1,6 @@
 import mysql.connector
 from mysql.connector import Error
 import logging
-from connect import dbconnect
 
 # Enable logging
 logging.basicConfig(
@@ -11,29 +10,30 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class create_tables:
-    def __init__(self) -> None:
+    def __init__(self, dbconnect) -> None:
+        self.dbconnect = dbconnect
         pass
 
     def create_all_tables(self):
         try:
-            connection = dbconnect().connect()
-            if connection.is_connected():
-                db_Info = connection.get_server_info()
+            if self.dbconnect.is_connected():
+                db_Info = self.dbconnect.get_server_info()
                 print("Connected to MySQL Server version ", db_Info)
-                cursor = connection.cursor()
+                cursor = self.dbconnect.cursor()
                 cursor.execute("select database();")
                 record = cursor.fetchone()
                 print("You're connected to database: ", record)
                 
                 mySql_Create_Table_Query0 = """CREATE TABLE products ( 
-                                    id int(11) NOT NULL,
+                                    id int(11) NOT NULL AUTO_INCREMENT,
                                     name varchar(250) NOT NULL,
+                                    description varchar(250) NOT NULL,
                                     price float NOT NULL,
                                     d_date Datetime NOT NULL,
                                     PRIMARY KEY (Id)) """
                             
                 mySql_Create_Table_Query1 = """CREATE TABLE payments ( 
-                                    id int(11) NOT NULL,
+                                    id int(11) NOT NULL AUTO_INCREMENT,
                                     product_id int(11) NOT NULL,
                                     name varchar(250) NOT NULL,
                                     price float NOT NULL,
@@ -43,7 +43,7 @@ class create_tables:
                                     PRIMARY KEY (Id),
                                     FOREIGN KEY (product_id) REFERENCES products(id)) """
 
-                cursor = connection.cursor()
+                cursor = self.dbconnect.cursor()
                 result = cursor.execute(mySql_Create_Table_Query0)
                 result = cursor.execute(mySql_Create_Table_Query1)
                 print("Payments Table created successfully ")
@@ -52,7 +52,7 @@ class create_tables:
             print("Error while connecting to MySQL", e)
             logging.exception('Got exception on {} handler'.format(__file__.split("/")[-1]))
         finally:
-            if connection.is_connected():
+            if self.dbconnect.is_connected():
                 cursor.close()
-                connection.close()
+                self.dbconnect.close()
                 print("MySQL connection is closed")
