@@ -94,7 +94,7 @@ class Reader:
         try:
             # Setting configuration values
             print("TelegramToMetatrader (version 1.0) Copyright @nkanven " + str(datetime.now().strftime("%Y")))
-            
+
             # Ensure you're authorized
             if not self.client.is_user_authorized():
                 self.client.send_code_request(self.phone)
@@ -105,7 +105,7 @@ class Reader:
 
             print("Telegram link Created with account number: +" + str(self.client.get_me().phone))
             print("Connected to Telegram.")
-            print("Telegram signal reader, waiting for message...")
+            print("Telegram signal reader, waiting for trading signal...")
 
 
             user_input_channel = "https://t.me/+DO2w2iQvujljNTA0" #input("enter entity(telegram URL or entity id):")
@@ -157,6 +157,7 @@ class Reader:
                 if not history.messages:
                     continue
 
+                
                 messages = history.messages
 
                 #Message doesn't exist
@@ -179,11 +180,14 @@ class Reader:
                 print(messages[0].date.tzinfo)"""
 
                 messageDate = messages[0].date.strftime("%Y-%m-%d %H:%M:%S")
+
                 timeZinfo = messages[0].date.tzinfo
 
                 #There is a new message if total stored messages count is different from total messages
+                
                 if self.total_messages != len(messages):
                     latest_message = messages[0].message.split(" ")
+
 
                     #Try to catch IndexError to verify if history.messages has sent messages
                     try:
@@ -207,7 +211,9 @@ class Reader:
                             f.write(str(latest_message[-1]))
 
                         self.total_messages = len(messages)
-                    except IndexError:
+                    except IndexError as e:
+                        
+                        print(e)
                         pass
 
 

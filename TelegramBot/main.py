@@ -25,6 +25,10 @@ from telegram.ext import (
     CallbackQueryHandler,
     filters,
 )
+from telegram.error import BadRequest
+from models.connect import dbconnect
+
+
 
 # Enable logging
 logging.basicConfig(
@@ -33,7 +37,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 #Live payment token = 350862534:LIVE:NDljNjYzMWFjYWIw 
 #Test payment token = 284685063:TEST:NTdhNmVhZjNhNjU0
-PAYMENT_PROVIDER_TOKEN = "350862534:LIVE:NDljNjYzMWFjYWIw"
+PAYMENT_PROVIDER_TOKEN = "284685063:TEST:MjU0MTM2YmY0ZjU1"
 
 keyboard = [
     [InlineKeyboardButton("S'abonner", callback_data="3")],
@@ -151,6 +155,7 @@ A vie 🏆 (♾ éternellement) - $500.0
 
         # optionally pass need_name=True, need_phone_number=True,
         # need_email=True, need_shipping_address=True, is_flexible=True
+
         await context.bot.send_invoice(
             chat_id, title, description, payload, PAYMENT_PROVIDER_TOKEN, currency, prices
         )
@@ -183,6 +188,19 @@ async def successful_payment_callback(update: Update, context: ContextTypes.DEFA
 
 2. Si tu as besoin de vérifier ton abonnement, reviens à ce bot (@mySalixBot) et clique sur informations. C’est également là que vous pouvez accéder au canal de signaux si tu le quittes accidentellement. 🔑
 """
+
+    mySql_insert_query = """INSERT INTO payments (product_id, name, price, meta_data, payment_processor, purchase_date) 
+                           VALUES (%s, %s, %s, %s) """
+
+    d_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    records_to_insert = [('Signaux-30', "Abonnement aux signaux de trading eInvestors pour 30 jours", 40, d_date),]
+
+    db = dbconnect().connect()
+    cursor = db.cursor()
+    cursor.executemany(mySql_insert_query, records_to_insert)
+    db.commit()
+    print(cursor.rowcount, "Record inserted successfully into Laptop table")
+    cursor.close()
     await update.message.reply_text(payment_message, reply_markup=reply_markup)
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -220,7 +238,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 def main() -> None:
     """Run the bot."""
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token("5693377576:AAGkLB6mocl9D8qS3ip4EUcUlub346wGJ1w").build()
+    #application = Application.builder().token("5693377576:AAGkLB6mocl9D8qS3ip4EUcUlub346wGJ1w").build()
+    application = Application.builder().token("1203586996:AAF3GTCy2yVyvXsCjd9pODhJncTUG7NcOKw").build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("abonnement", abonnement))
