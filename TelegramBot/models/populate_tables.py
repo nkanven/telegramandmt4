@@ -1,7 +1,7 @@
 import mysql.connector
 from mysql.connector import Error
 import logging
-from connect import dbconnect
+from db import Dbconnect
 from datetime import datetime
 
 # Enable logging

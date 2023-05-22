@@ -1,4 +1,4 @@
-from connect import dbconnect
+from TelegramBot.models.db import connect
 from tables import create_tables
 from populate_tables import insert_data
 
@@ -6,7 +6,7 @@ class run:
     def __init__(self) -> None:
         #Create all necessary tables
         #Connect to database
-        connexion = dbconnect().connect()
+        connexion = connect()
 
         ct = create_tables(connexion)
         ct.create_all_tables()

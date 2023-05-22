@@ -1,4 +1,5 @@
-from telegramreader import Reader
+from TelegramBot.telegramreader import Reader
+
 
 initReader = Reader()
 

@@ -3,6 +3,8 @@ from datetime import datetime
 
 from telegram import __version__ as TG_VER
 
+from TelegramBot.models.db import connect
+
 try:
     from telegram import __version_info__
 except ImportError:
@@ -14,8 +16,8 @@ if __version_info__ < (20, 0, 0, "alpha", 1):
         f"{TG_VER} version of this example, "
         f"visit https://docs.python-telegram-bot.org/en/v{TG_VER}/examples.html"
     )
-from telegram import LabeledPrice, Update
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, Update, Message
+from telegram import LabeledPrice
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, Update
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -25,19 +27,14 @@ from telegram.ext import (
     CallbackQueryHandler,
     filters,
 )
-from telegram.error import BadRequest
-from models.connect import dbconnect
-
-
+import os
 
 # Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-#Live payment token = 350862534:LIVE:NDljNjYzMWFjYWIw 
-#Test payment token = 284685063:TEST:NTdhNmVhZjNhNjU0
-PAYMENT_PROVIDER_TOKEN = "284685063:TEST:MjU0MTM2YmY0ZjU1"
+PAYMENT_PROVIDER_TOKEN = os.getenv('PAYMENT_PROVIDER_TOKEN_TEST')
 
 keyboard = [
     [InlineKeyboardButton("S'abonner", callback_data="3")],
@@ -195,7 +192,7 @@ async def successful_payment_callback(update: Update, context: ContextTypes.DEFA
     d_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     records_to_insert = [('Signaux-30', "Abonnement aux signaux de trading eInvestors pour 30 jours", 40, d_date),]
 
-    db = dbconnect().connect()
+    db = connect()
     cursor = db.cursor()
     cursor.executemany(mySql_insert_query, records_to_insert)
     db.commit()
@@ -239,7 +236,7 @@ def main() -> None:
     """Run the bot."""
     # Create the Application and pass it your bot's token.
     #application = Application.builder().token("5693377576:AAGkLB6mocl9D8qS3ip4EUcUlub346wGJ1w").build()
-    application = Application.builder().token("1203586996:AAF3GTCy2yVyvXsCjd9pODhJncTUG7NcOKw").build()
+    application = Application.builder().token(os.getenv('TELEGRAM_APPLICATION_TOKEN')).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("abonnement", abonnement))

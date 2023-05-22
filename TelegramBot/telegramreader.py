@@ -1,40 +1,35 @@
-#pip install auto-py-to-exe
+# pip install auto-py-to-exe
 
 import logging
 from datetime import datetime
 import socket
-
 import os
-import sys
-import time
-import json
 
-import traceback
+from TelegramBot.utils.message_parser import Parse
 
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
 import telethon.sync
 
-from telethon.tl.functions.channels import GetParticipantsRequest
-from telethon.tl.types import ChannelParticipantsSearch
 from telethon.tl.types import (
-PeerChannel
+    PeerChannel
 )
 
 from telethon.tl.functions.messages import (GetHistoryRequest)
 
-class Reader:
 
+class Reader:
     """
     Telegram reader class to do fetch new trade order and store it on user devise.
-    
+
     This class have one principal function
 
     Main() handle te connection with Telegram server and logged user.
     """
+
     def __init__(self) -> None:
-        self.api_id = 1290118
-        self.api_hash = "204a57ac250f69a3d108ea6bb3857810"
+        self.api_id = int(os.getenv('TELEGRAMCLIENT_API_ID'))
+        self.api_hash = os.getenv('TELEGRAMCLIENT_API_HASH')
 
         self.api_hash = str(self.api_hash)
 
@@ -42,23 +37,33 @@ class Reader:
 
         self.phone = ""
         self.offset = 0
-        self.limit = 100
+        self.limit = int(os.getenv('HISTORY_LIMIT'))
         self.all_participants = []
         self.offset_id = 0
         self.all_messages = []
         self.total_messages = 0
         self.total_count_limit = 0
 
+        print("TelegramToMetatrader (version " + os.getenv('VERSION') + ") Copyright @" + os.getenv(
+            'AUTHOR_USERNAME') + " " + str(datetime.now().strftime("%Y")))
+
         # Create the client and connect
         self.client = TelegramClient("me", self.api_id, self.api_hash)
-        self.client.start()
+
+        while True:
+            try:
+                self.client.start()
+                break
+            except ConnectionError:
+                print("Cannot send requests while disconnected. Please check your Internet connexion")
+
         self.my_channel = ""
 
         self.orderTicketFilePath = "orderticket.txt"
 
-        logging.basicConfig(filename="error.log", format="%(asctime)s %(clientip)-15s %(user)-8s %(message)s")
+        logging.basicConfig(filename="../error.log", format="%(asctime)s %(clientip)-15s %(user)-8s %(message)s")
 
-        #Delete stored order ticket. 
+        # Delete stored order ticket.
         if os.path.isfile(self.orderTicketFilePath):
             os.remove(self.orderTicketFilePath)
         pass
@@ -67,17 +72,18 @@ class Reader:
     OnStartChecks handles the basic checks for the program successfull launch. Store 0 as order ticket
     if file does not exist. Get the last order ticket and store it.
     """
-    def OnStartChecks(self):
+
+    def onstartchecks(self):
         history = self.client(GetHistoryRequest(
-                    peer=self.my_channel,
-                    offset_id=self.offset_id,
-                    offset_date=None,
-                    add_offset=0,
-                    limit=self.limit,
-                    max_id=0,
-                    min_id=0,
-                    hash=0
-                ))
+            peer=self.my_channel,
+            offset_id=self.offset_id,
+            offset_date=None,
+            add_offset=0,
+            limit=self.limit,
+            max_id=0,
+            min_id=0,
+            hash=0
+        ))
 
         if not os.path.isfile(self.orderTicketFilePath):
             f = open(self.orderTicketFilePath, "w")
@@ -86,14 +92,17 @@ class Reader:
             else:
                 messages = history.messages
                 latest_message = messages[0].message.split(" ")
-                orderTicket = latest_message[-1]
-                f.write(str(orderTicket))
+                order_ticket = latest_message[-1]
+                f.write(str(order_ticket))
 
     def main(self):
 
+        hostname = socket.gethostname()
+        ip_address = socket.gethostbyname(hostname)
+        d = {'clientip': ip_address, hostname: 'telegramreader'}
+
         try:
             # Setting configuration values
-            print("TelegramToMetatrader (version 1.0) Copyright @nkanven " + str(datetime.now().strftime("%Y")))
 
             # Ensure you're authorized
             if not self.client.is_user_authorized():
@@ -107,8 +116,7 @@ class Reader:
             print("Connected to Telegram.")
             print("Telegram signal reader, waiting for trading signal...")
 
-
-            user_input_channel = "https://t.me/+DO2w2iQvujljNTA0" #input("enter entity(telegram URL or entity id):")
+            user_input_channel = os.getenv('TELEGRAM_USER_URL')  # input("enter entity(telegram URL or entity id):")
 
             if user_input_channel.isdigit():
                 entity = PeerChannel(int(user_input_channel))
@@ -136,12 +144,12 @@ class Reader:
             with open('user_data.json', 'w') as outfile:
                 json.dump(all_user_details, outfile)"""
 
-            self.OnStartChecks()
+            self.onstartchecks()
 
             while True:
-                #print("Current Offset ID is:", offset_id, "; Total Messages:", total_messages)
+                # print("Current Offset ID is:", offset_id, "; Total Messages:", total_messages)
 
-                #Get channel history
+                # Get channel history
                 history = self.client(GetHistoryRequest(
                     peer=self.my_channel,
                     offset_id=self.offset_id,
@@ -153,74 +161,54 @@ class Reader:
                     hash=0
                 ))
 
-                #Check for messages
+                # Check for messages
                 if not history.messages:
                     continue
 
-                
                 messages = history.messages
 
-                #Message doesn't exist
+                # Message doesn't exist
                 if not messages[0].message:
                     continue
 
                 f = open(self.orderTicketFilePath, "r")
-                previousOrderTicket = f.read()
+                previous_order_ticket = f.read()
 
-                #Get message time difference to store the most recent trade signal
+                # Get message time difference to store the most recent trade signal
                 """dt_obj = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 nowtimestamp = time.mktime(time.strptime(dt_obj, '%Y-%m-%d %H:%M:%S'))
-                messageDate = messages[0].date.strftime("%Y-%m-%d %H:%M:%S")
-                timestamp = time.mktime(time.strptime(messageDate, '%Y-%m-%d %H:%M:%S'))
+                message_date = messages[0].date.strftime("%Y-%m-%d %H:%M:%S")
+                timestamp = time.mktime(time.strptime(message_date, '%Y-%m-%d %H:%M:%S'))
                 latest_message_timediff = nowtimestamp - timestamp
 
                 print(latest_message_timediff)
                 print(nowtimestamp, timestamp)
-                print(dt_obj, messageDate)
+                print(dt_obj, message_date)
                 print(messages[0].date.tzinfo)"""
 
-                messageDate = messages[0].date.strftime("%Y-%m-%d %H:%M:%S")
+                message_date = messages[0].date.strftime("%Y-%m-%d %H:%M:%S")
 
-                timeZinfo = messages[0].date.tzinfo
+                time_zinfo = messages[0].date.tzinfo
 
-                #There is a new message if total stored messages count is different from total messages
-                
+                # There is a new message if total stored messages count is different from total messages
+
                 if self.total_messages != len(messages):
                     latest_message = messages[0].message.split(" ")
 
+                    print(len(latest_message))
 
-                    #Try to catch IndexError to verify if history.messages has sent messages
+                    # Try to catch IndexError to verify if history.messages has sent messages
                     try:
-                        orderType = latest_message[1]
-                        orderSymbol = latest_message[2]
-                        orderExecution = latest_message[3]
-                        orderEntryPrice = latest_message[5]
-                        orderTakeProfit = latest_message[10]
-                        orderStopLoss = latest_message[14]
-                        orderTicket = latest_message[-1]
-
-                        if previousOrderTicket == "0" or previousOrderTicket != str(latest_message[-1]):
-                            print("Received trade signal from: " + self.my_channel.title + " (Received " + messageDate + " " + str(timeZinfo) + ")")
-                            print("MT4 signal: /open " + orderType + " " + orderSymbol + " " + orderExecution + " " + orderEntryPrice + " " + orderTakeProfit + " " + orderStopLoss + " " + orderTicket)
-                            
-                            f = open("order.bin", "w")
-                            f.write(orderType + " " + orderSymbol + " " + orderExecution + " " + orderEntryPrice + " " + orderTakeProfit + " " + orderStopLoss)
-                            f.close()
-
-                            f = open("orderticket.txt", "w")
-                            f.write(str(latest_message[-1]))
+                        Parse(latest_message, previous_order_ticket, message_date, time_zinfo, self.my_channel.title)
 
                         self.total_messages = len(messages)
                     except IndexError as e:
-                        
                         print(e)
-                        pass
 
+                # print("Listening Telegram channel...")
 
-                #print("Listening Telegram channel...")
-        except Exception as e:
-            hostname = socket.gethostname()
-            ip_address = socket.gethostbyname(hostname)
-            d = {'clientip': ip_address, hostname: 'telegramreader'}
+        except ConnectionError as e:
+            print(e)
+            logging.exception('Got OSError on main handler', extra=d)
+        except Exception:
             logging.exception('Got exception on main handler', extra=d)
-            raise

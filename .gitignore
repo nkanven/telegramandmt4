@@ -8,6 +8,7 @@ __pycache__
 **/inlinekeyboard2.py
 venv
 .vscode
+.env
 upx.exe
 # Node artifact files
 node_modules/
@@ -59,4 +60,4 @@ Thumbs.db
 *.session
 *.session-journal
 *.spec
-
+*.bin

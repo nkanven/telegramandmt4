@@ -1,4 +1,5 @@
 mysql-connector==2.2.9
 mysql-connector-python==8.0.33
+python-dotenv==1.0.0
 python-telegram-bot==20.3
 Telethon==1.28.5
